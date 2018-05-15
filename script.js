@@ -1,3 +1,4 @@
+
 var canvas, context;
 var HEIGHT = window.innerHeight, WIDTH = window.innerWidth;
 const pi =  Math.PI;
@@ -31,13 +32,13 @@ function main()
     Update();
     Draw();
     timer = setTimeout(function() {
-        anim = requestAnimationFrame(main);
+        anim = requestAnimationFrame( main );
     }, 1000 / 24);
 }
 
 function prepareCanvas() 
 {
-    canvas = document.createElement( 'canvas' );
+    canvas = document.createElement( "canvas" );
     canvas.height = HEIGHT;
     canvas.width = WIDTH;
     document.body.appendChild( canvas );
@@ -53,23 +54,23 @@ function setupGui()
 
 function createRectangles()
 {
-    rectangle1 = new Rectangle("#AAAAAA");
-    rectangle2 = new Rectangle("#111111");
-    rectangle3 = new Rectangle("#555555");
-    rectangle3g = new Rectangle("#555555");
+    rectangle1 = new Rectangle( "#FF0000" );
+    rectangle2 = new Rectangle( "#0000FF" );
+    rectangle3 = new Rectangle( "#FF00FF" );
+    rectangle3g = new Rectangle( "#FF00FF" );
 }
 
 function Update() 
 {
-    let rgb1 = HEX2RGB(rectangle1.color);
-    let rgb2 = HEX2RGB(rectangle2.color);
+    let rgb1 = HEX2RGB( rectangle1.color );
+    let rgb2 = HEX2RGB (rectangle2.color );
     let rgb3 = [ 0, 0, 0 ];
     let rgb3g = [ 0, 0, 0 ];
     //
     for ( let i = 0; i < 3; i++ )
     {
         rgb3[i] = ( rgb1[i] + rgb2[i] ) * 0.5;
-        rgb3g[i] = Math.pow( ( Math.pow( rgb1[i], gamma ) + Math.pow( rgb2[i], gamma ) ) * 0.5, 1/gamma );
+        rgb3g[i] =  Math.pow( ( rgb1[i] / 255 + rgb2[i] / 255 ) * 0.5, 1 / gamma) * 255;
     }
     rectangle3.color = RGB2HEX( rgb3 );
     rectangle3g.color = RGB2HEX( rgb3g );
@@ -111,22 +112,22 @@ function Draw()
 }
 
 
-function RGB2HEX(rgb)
+function RGB2HEX( rgb )
 {
     let decimal = rgb[0] << 16 | (rgb[1] << 8 & 0xFFFF) | rgb[2];
-    let hex = decimal.toString(16);
-    hex = "000000".substring(0, 6 - hex.length) + hex;
+    let hex = decimal.toString( 16 );
+    hex = "000000".substring( 0, 6 - hex.length ) + hex;
     
     return '#' + hex.toUpperCase();
 }
 
-function HEX2RGB(hex)
+function HEX2RGB( hex )
 {
-    let decimal = parseInt(hex.substring(1,7), 16);
+    let decimal = parseInt( hex.substring( 1,7 ), 16 );
 
     let r = decimal >> 16;
     let g = ( decimal >> 8 ) & 0xFF;
     let b = decimal & 0xFF;
 
-    return [r, g, b];
+    return [ r, g, b ];
 }
