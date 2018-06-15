@@ -84,7 +84,7 @@ function Draw()
     // circles
     let startAngle = segment.startAngle;
     let endAngle = segment.endAngle;
-    let deltaAngle = ( segment.endAngle - segment.startAngle ) / segment.partsAmount;
+    let deltaAngle = ( endAngle - startAngle ) / segment.partsAmount;
 
     
     let rgbColorFirst = HEX2RGB( segment.firstSegmentColor );
