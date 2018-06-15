@@ -1,116 +1,132 @@
 
 var canvas, context;
 var HEIGHT = window.innerHeight, WIDTH = window.innerWidth;
-const pi =  Math.PI;
-const gamma = 2.2; 
+const PI =  Math.PI;
+const gamma = 2.2;
 
-class Rectangle
+const x = WIDTH * 0.68;
+const y = HEIGHT * 0.5;
+const r = 250;
+var mixing = {alpha:0.5};
+
+var anim;
+var timer;
+
+class Segment 
 {
-    constructor( color ) {
-        this.color = color;
-      }
-
+    constructor( startAngle, endAngle, partsAmount )
+    {
+        this.startAngle = startAngle;
+        this.endAngle = endAngle;
+        this.partsAmount = partsAmount;
+        this.firstSegmentColor = "#FFFFFF";
+        this.lastSegmentColor = "#000000";
+    }
 }
-
-var rectangleSize = WIDTH / 10; 
-var rectangle1, rectangle2, rectangle3, rectangle3g;
-
-var timer, anim;
 
 document.addEventListener( "DOMContentLoaded", start );
 
-function start() 
+function start()
 {
     prepareCanvas();
-    createRectangles();
-    setupGui();
+    segment = new Segment( 0, 2 * PI, 100 );
+    setupGui(); 
     main();
 }
 
 function main() 
 {
-    Update();
+    //Update();
     Draw();
     timer = setTimeout(function() {
-        anim = requestAnimationFrame( main );
+        anim = requestAnimationFrame(main);
     }, 1000 / 24);
 }
 
-function prepareCanvas() 
-{
-    canvas = document.createElement( "canvas" );
+function prepareCanvas()
+ {
+    canvas = document.createElement('canvas');
     canvas.height = HEIGHT;
     canvas.width = WIDTH;
-    document.body.appendChild( canvas );
-    context = canvas.getContext( "2d" );
+    document.body.appendChild(canvas);
+    context = canvas.getContext("2d");
 }
 
-function setupGui() 
-{
+function setupGui()
+ {
     var gui = new dat.GUI();
-    gui.addColor( rectangle1, 'color' );
-    gui.addColor( rectangle2, 'color' );
-}
-
-function createRectangles()
-{
-    rectangle1 = new Rectangle( "#FF0000" );
-    rectangle2 = new Rectangle( "#0000FF" );
-    rectangle3 = new Rectangle( "#FF00FF" );
-    rectangle3g = new Rectangle( "#FF00FF" );
+    gui.add(segment, 'partsAmount', 10, 255)
+        .name("Segment amount")
+        .step(1);
+    gui.addColor( segment, 'firstSegmentColor' );
+    gui.addColor( segment, 'lastSegmentColor' );
+    gui.add( mixing, 'alpha', 0, 1 )
+        .name( "Mixing constant" )   
+        .step( 0.05 );
 }
 
 function Update() 
 {
-    let rgb1 = HEX2RGB( rectangle1.color );
-    let rgb2 = HEX2RGB (rectangle2.color );
-    let rgb3 = [ 0, 0, 0 ];
-    let rgb3g = [ 0, 0, 0 ];
-    //
-    for ( let i = 0; i < 3; i++ )
-    {
-        rgb3[i] = ( rgb1[i] + rgb2[i] ) * 0.5;
-        rgb3g[i] =  Math.pow( ( rgb1[i] / 255 + rgb2[i] / 255 ) * 0.5, 1 / gamma) * 255;
-    }
-    rectangle3.color = RGB2HEX( rgb3 );
-    rectangle3g.color = RGB2HEX( rgb3g );
+
 }
 
 function Draw() 
 {
     // clear screen
-    context.fillStyle = "#FFFFFF";
-    context.fillRect( 0, 0, WIDTH, HEIGHT );
-    
-    //text
+    context.fillStyle = "#E0E0E0";
+    context.fillRect(0, 0, WIDTH, HEIGHT);
+
+    // text
     context.fillStyle = "#000000";
-    context.font = "30px Arial";
-    context.fillText( "Mixing colors with NO gamma correction", WIDTH * 0.4 - 2 * rectangleSize, HEIGHT * 0.5 - 2.1 * rectangleSize );
-    context.fillText( "Mixing colors with gamma correction", WIDTH * 0.4 - 2 * rectangleSize, HEIGHT * 0.9 - 2.1 * rectangleSize );
+    context.font = "bold italic 40px Arial";
+    context.fillText( "Color mixing demo", WIDTH * 0.1, HEIGHT * 0.1  );
+
+    // circles
+    let startAngle = segment.startAngle;
+    let endAngle = segment.endAngle;
+    let deltaAngle = ( segment.endAngle - segment.startAngle ) / segment.partsAmount;
+
     
-    // rectangles
+    let rgbColorFirst = HEX2RGB( segment.firstSegmentColor );
+    let rgbColorLast = HEX2RGB( segment.lastSegmentColor );
+    let deltaColor = [0, 0, 0];
+    let mixColor = [0, 0, 0];
+    //
+    for (let i = 0; i < 3; i++)
+    {
+        deltaColor[i] = ( rgbColorLast[i] - rgbColorFirst[i] ) / segment.partsAmount;
+        mixColor[i] = rgbColorLast[i] * ( 1 - mixing.alpha ) + rgbColorFirst[i] * mixing.alpha; 
+    }
+    //
+    for ( let i = 0; i < segment.partsAmount; i++ )
+    {
+        let newColor = [0, 0, 0];
+        for (let j = 0; j < 3; j++)
+        {
+            newColor[j] = rgbColorFirst[j] + i * deltaColor[j]; 
+        }
+
+        context.beginPath();
+        context.fillStyle = RGB2HEX( newColor );
+        context.strokeStyle = RGB2HEX( newColor );
     
-    //up
-    context.fillStyle = rectangle1.color;
-    context.fillRect( WIDTH * 0.4 - 2 * rectangleSize , HEIGHT * 0.5 - 2 * rectangleSize, rectangleSize, rectangleSize );
+        context.moveTo(x, y);
+        context.arc(x, y, r, startAngle + deltaAngle * i, startAngle + deltaAngle * ( i + 1 ));
+        context.stroke();
+        context.fill();
+        context.closePath(); 
+    }
 
-    context.fillStyle = rectangle2.color;
-    context.fillRect( WIDTH * 0.4,                      HEIGHT * 0.5 - 2 * rectangleSize, rectangleSize, rectangleSize );
+    // quadrants
+    context.fillStyle = RGB2HEX( rgbColorLast );
+    context.fillRect( x - 2.75 * r, y - 0.75 * r, r, r );
 
-    context.fillStyle = rectangle3.color;
-    context.fillRect( WIDTH * 0.5 + 2 * rectangleSize,  HEIGHT * 0.5 - 2 * rectangleSize, rectangleSize, rectangleSize );
+    context.fillStyle = RGB2HEX( rgbColorFirst );
+    context.fillRect( x - 2.248 * r, y - 0.25 * r, r, r );
 
-    //bottom
-    context.fillStyle = rectangle1.color;
-    context.fillRect( WIDTH * 0.4 - 2 * rectangleSize , HEIGHT * 0.9 - 2 * rectangleSize, rectangleSize, rectangleSize );
-
-    context.fillStyle = rectangle2.color;
-    context.fillRect( WIDTH * 0.4,                      HEIGHT * 0.9 - 2 * rectangleSize, rectangleSize, rectangleSize );
-
-    context.fillStyle = rectangle3g.color;
-    context.fillRect( WIDTH * 0.5 + 2 * rectangleSize,  HEIGHT * 0.9 - 2 * rectangleSize, rectangleSize, rectangleSize );
+    context.fillStyle = RGB2HEX ( mixColor );
+    context.fillRect( x - 2.25 * r, y - 0.25 * r, 0.5 * r, 0.5 * r );
 }
-
 
 function RGB2HEX( rgb )
 {
@@ -123,11 +139,11 @@ function RGB2HEX( rgb )
 
 function HEX2RGB( hex )
 {
-    let decimal = parseInt( hex.substring( 1,7 ), 16 );
+    let decimal = parseInt( hex.substring( 1, 7 ), 16 );
 
     let r = decimal >> 16;
     let g = ( decimal >> 8 ) & 0xFF;
     let b = decimal & 0xFF;
 
-    return [ r, g, b ];
+    return [r, g, b];
 }
